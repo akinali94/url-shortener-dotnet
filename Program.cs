@@ -1,3 +1,8 @@
+using url_shortener_dotnet.Domain.Helpers;
+using url_shortener_dotnet.Domain.Interfaces;
+using url_shortener_dotnet.Domain.Services;
+using url_shortener_dotnet.Infrastructure.Data;
+
 namespace url_shortener_dotnet;
 
 public class Program
@@ -5,6 +10,17 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddSingleton<IUrlRepository, UrlRepository>();
+        builder.Services.AddSingleton<IUrlShortenerService, UrlShortenerService>();
+
+        builder.Services.AddSingleton<SnowflakeIdGenerator>(provider =>
+        {
+            long datacenterId = long.Parse(Environment.GetEnvironmentVariable("DATACENTER_ID") ?? "1");
+            long machineId = long.Parse(Environment.GetEnvironmentVariable("MACHINE_ID") ?? "1");
+
+            return new SnowflakeIdGenerator(datacenterId, machineId);
+        });
 
         // Add services to the container.
         builder.Services.AddAuthorization();
