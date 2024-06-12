@@ -1,20 +1,37 @@
+using MongoDB.Driver;
 using url_shortener_dotnet.Domain.Entities;
 using url_shortener_dotnet.Domain.Interfaces;
+using url_shortener_dotnet.Infrastructure.Configs;
 
 namespace url_shortener_dotnet.Infrastructure.Data;
 
 public class UrlRepository : IUrlRepository
 {
-    private readonly Dictionary<string, UrlMapping> _urlMappings = new Dictionary<string, UrlMapping>();
+    private readonly DbContext _database;
 
-    public UrlMapping GetByShortUrl(string shortUrl)
+    public UrlRepository(DbContext database)
     {
-        _urlMappings.TryGetValue(shortUrl, out var urlMapping);
-        return urlMapping;
+        _database = database;
     }
 
-    public void Save(UrlMapping urlMapping)
+    public async Task<UrlMapping> GetByShortUrl(string shortUrl)
     {
-        _urlMappings[urlMapping.ShortUrl] = urlMapping;
+        var result  = await _database.UrlMappings
+            .Find(x => x.ShortUrl == shortUrl).FirstOrDefaultAsync();
+
+        if (result == null)
+            throw new Exception("Null from database");
+        
+        return result ;
+    }
+
+    public async Task Save(UrlMapping urlMapping)
+    {
+        await _database.UrlMappings.InsertOneAsync(urlMapping);
+    }
+
+    public async Task<IEnumerable<UrlMapping>> GetAll()
+    {
+        return await _database.UrlMappings.Find(x => true).ToListAsync();
     }
 }

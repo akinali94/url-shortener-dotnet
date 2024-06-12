@@ -4,6 +4,7 @@ namespace url_shortener_dotnet.Domain.Interfaces;
 
 public interface IUrlRepository
 {
-    UrlMapping GetByShortUrl(string shortUrl);
-    void Save(UrlMapping urlMapping);
+    Task<UrlMapping> GetByShortUrl(string shortUrl);
+    Task Save(UrlMapping urlMapping);
+    Task<IEnumerable<UrlMapping>> GetAll();
 }

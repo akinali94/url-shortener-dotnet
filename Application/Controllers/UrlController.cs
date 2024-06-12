@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using url_shortener_dotnet.Domain.Interfaces;
 using url_shortener_dotnet.Domain.Services;
@@ -14,24 +15,29 @@ public class UrlController : ControllerBase
     {
         _urlShortenerService = urlShortenerService;
     }
+    
+    [HttpGet("GetAll")]
+    public async Task<IActionResult> GetAll()
+    {
+        var allMappings = await _urlShortenerService.GetAll();
+        return Ok(allMappings);
+    }
 
     [HttpPost("shorten")]
-    public IActionResult ShortenUrl([FromBody] string longUrl)
+    public async Task<IActionResult> ShortenUrl([FromBody] string longUrl)
     {
-        var shortUrl = _urlShortenerService.ShortenUrl(longUrl);
+        var shortUrl = await _urlShortenerService.ShortenUrl(longUrl);
         return Ok(shortUrl);
     }
 
     [HttpGet("{shortUrl}")]
-    public IActionResult RedirectToLongUrl([FromQuery]string shortUrl)
+    public async Task<IActionResult> RedirectToLongUrl([FromRoute]string shortUrl)
     {
-        var longUrl = _urlShortenerService.GetLongUrl(shortUrl);
-        
+        var longUrl = await _urlShortenerService.GetLongUrl(shortUrl);
+
         if (longUrl == null)
-        {
             return NotFound();
-        }
-        
+
         return Redirect(longUrl);
     }
 }

@@ -8,34 +8,54 @@ public class UrlShortenerService : IUrlShortenerService
 {
     private readonly IUrlRepository _urlRepository;
     private readonly SnowflakeIdGenerator _snowflakeId;
+    private readonly Base58Encoder _base58Encoder;
 
-    public UrlShortenerService(IUrlRepository urlRepository, SnowflakeIdGenerator snowflakeId)
+    public UrlShortenerService(IUrlRepository urlRepository,
+                                SnowflakeIdGenerator snowflakeId,
+                                Base58Encoder base58Encoder)
     {
         _urlRepository = urlRepository;
         _snowflakeId = snowflakeId;
+        _base58Encoder = base58Encoder;
     }
 
-    public string ShortenUrl(string longUrl)
+    public async Task<string> ShortenUrl(string longUrl)
     {
-        var shortUrl = GenerateShortUrl();
+        var id = _snowflakeId.GenerateId();
+
+        var shortUrl = _base58Encoder.Encode(id);
+        
         var urlMapping = new UrlMapping
         {
+            Id = id.ToString(),
             ShortUrl = shortUrl, 
             LongUrl = longUrl
         };
-        _urlRepository.Save(urlMapping);
+        
+        await _urlRepository.Save(urlMapping);
+        
         return shortUrl;
     }
 
-    public string GetLongUrl(string shortUrl)
+    public async Task<string> GetLongUrl(string shortUrl)
     {
-        var urlMapping = _urlRepository.GetByShortUrl(shortUrl);
-        return urlMapping?.LongUrl;
+        var longUrl = await _urlRepository.GetByShortUrl(shortUrl);
+
+        var result = longUrl.LongUrl;
+        
+        if (!result.StartsWith("http://") && !result.StartsWith("https://"))
+        {
+            result = "https://" + result;
+        }
+
+        return result;
+        
     }
 
-    private string GenerateShortUrl()
+    public Task<IEnumerable<UrlMapping>> GetAll()
     {
-        // Implement URL shortening logic (e.g., hash the long URL)
-        return Guid.NewGuid().ToString().Substring(0, 8);
+        var getAll = _urlRepository.GetAll();
+        
+        return getAll;
     }
 }
