@@ -20,11 +20,14 @@ public class UrlController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var allMappings = await _urlShortenerService.GetAll();
+        if (allMappings is null)
+            return Ok("No Entry");
+        
         return Ok(allMappings);
     }
 
-    [HttpPost("shorten")]
-    public async Task<IActionResult> ShortenUrl([FromBody] string longUrl)
+    [HttpPost("Shorten/{longUrl}")]
+    public async Task<IActionResult> ShortenUrl([FromRoute] string longUrl)
     {
         var shortUrl = await _urlShortenerService.ShortenUrl(longUrl);
         return Ok(shortUrl);
@@ -40,4 +43,5 @@ public class UrlController : ControllerBase
 
         return Redirect(longUrl);
     }
+    
 }

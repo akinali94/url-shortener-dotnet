@@ -1,3 +1,5 @@
+using StackExchange.Redis;
+using url_shortener_dotnet.Application.Middlewares;
 using url_shortener_dotnet.Domain.Helpers;
 using url_shortener_dotnet.Domain.Interfaces;
 using url_shortener_dotnet.Domain.Services;
@@ -14,6 +16,9 @@ public class Program
 
         builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("UrlDatabase"));
 
+        builder.Services.AddSingleton<IConnectionMultiplexer>(
+            ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_DB")));
+        
         builder.Services.AddScoped<DbContext>();
         builder.Services.AddScoped<IUrlRepository, UrlRepository>();
         builder.Services.AddScoped<IUrlShortenerService, UrlShortenerService>();
@@ -22,8 +27,8 @@ public class Program
         
         builder.Services.AddSingleton<SnowflakeIdGenerator>(provider =>
         {
-            long datacenterId = long.Parse(/*Environment.GetEnvironmentVariable("DATACENTER_ID") ??*/ "1");
-            long machineId = long.Parse(/*Environment.GetEnvironmentVariable("MACHINE_ID") ??*/ "1");
+            long datacenterId = long.Parse(Environment.GetEnvironmentVariable("DATACENTER_ID"));
+            long machineId = long.Parse(Environment.GetEnvironmentVariable("MACHINE_ID"));
 
             return new SnowflakeIdGenerator(datacenterId, machineId);
         });
@@ -46,11 +51,15 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
+        //app.UseHttpsRedirection();
         //app.UseRouting();
         
-
         app.UseAuthorization();
+        
+        app.UseMiddleware<ExceptionMiddleware>();
+        
+        //Redis
+        app.UseSlidingWindowRateLimiter();
 
         app.MapControllers();
 

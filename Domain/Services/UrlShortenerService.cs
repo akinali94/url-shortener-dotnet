@@ -21,6 +21,12 @@ public class UrlShortenerService : IUrlShortenerService
 
     public async Task<string> ShortenUrl(string longUrl)
     {
+        var checkResult = await _urlRepository.CheckLongUrl(longUrl);
+        if (!string.IsNullOrEmpty(checkResult))
+        {
+            return checkResult;
+        }
+        
         var id = _snowflakeId.GenerateId();
 
         var shortUrl = _base58Encoder.Encode(id);

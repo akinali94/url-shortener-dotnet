@@ -6,5 +6,6 @@ public interface IUrlRepository
 {
     Task<UrlMapping> GetByShortUrl(string shortUrl);
     Task Save(UrlMapping urlMapping);
+    Task<string> CheckLongUrl(string longUrl);
     Task<IEnumerable<UrlMapping>> GetAll();
 }

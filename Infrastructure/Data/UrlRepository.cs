@@ -1,7 +1,9 @@
 using MongoDB.Driver;
 using url_shortener_dotnet.Domain.Entities;
+using url_shortener_dotnet.Domain.ExceptionHandling;
 using url_shortener_dotnet.Domain.Interfaces;
 using url_shortener_dotnet.Infrastructure.Configs;
+using InvalidOperationException = url_shortener_dotnet.Domain.ExceptionHandling.InvalidOperationException;
 
 namespace url_shortener_dotnet.Infrastructure.Data;
 
@@ -19,15 +21,31 @@ public class UrlRepository : IUrlRepository
         var result  = await _database.UrlMappings
             .Find(x => x.ShortUrl == shortUrl).FirstOrDefaultAsync();
 
-        if (result == null)
-            throw new Exception("Null from database");
+        if (result is null)
+            throw new FetchingDataException("Short Url Not Found on Database");
         
         return result ;
     }
 
     public async Task Save(UrlMapping urlMapping)
     {
-        await _database.UrlMappings.InsertOneAsync(urlMapping);
+        try
+        {
+            await _database.UrlMappings.InsertOneAsync(urlMapping);
+        }
+        catch(Exception ex)
+        {
+            throw new InvalidOperationException($"Generate short url failed!: {ex.Message}");
+        }
+        
+    }
+
+    public async Task<string> CheckLongUrl(string longUrl)
+    {
+        var result = _database.UrlMappings.Find(x => x.LongUrl == longUrl).FirstOrDefaultAsync();
+
+        return result.Result.ShortUrl;
+
     }
 
     public async Task<IEnumerable<UrlMapping>> GetAll()
