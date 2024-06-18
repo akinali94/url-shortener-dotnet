@@ -42,9 +42,9 @@ public class UrlRepository : IUrlRepository
 
     public async Task<string> CheckLongUrl(string longUrl)
     {
-        var result = _database.UrlMappings.Find(x => x.LongUrl == longUrl).FirstOrDefaultAsync();
+        var result = await _database.UrlMappings.Find(x => x.LongUrl == longUrl).FirstOrDefaultAsync();
 
-        return result.Result.ShortUrl;
+        return result.ShortUrl;
 
     }
 

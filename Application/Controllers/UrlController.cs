@@ -26,8 +26,8 @@ public class UrlController : ControllerBase
         return Ok(allMappings);
     }
 
-    [HttpPost("Shorten/{longUrl}")]
-    public async Task<IActionResult> ShortenUrl([FromRoute] string longUrl)
+    [HttpPost("Shorten/")]
+    public async Task<IActionResult> ShortenUrl([FromBody] string longUrl)
     {
         var shortUrl = await _urlShortenerService.ShortenUrl(longUrl);
         return Ok(shortUrl);
