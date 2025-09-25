@@ -17,7 +17,7 @@ public class Program
         builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("UrlDatabase"));
 
         builder.Services.AddSingleton<IConnectionMultiplexer>(
-            ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_DB")));
+            ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_DB") ?? "localhost:6379"));
         
         builder.Services.AddScoped<DbContext>();
         builder.Services.AddScoped<IUrlRepository, UrlRepository>();
@@ -27,8 +27,8 @@ public class Program
         
         builder.Services.AddSingleton<SnowflakeIdGenerator>(provider =>
         {
-            long datacenterId = long.Parse(Environment.GetEnvironmentVariable("DATACENTER_ID"));
-            long machineId = long.Parse(Environment.GetEnvironmentVariable("MACHINE_ID"));
+            long datacenterId = long.Parse(Environment.GetEnvironmentVariable("DATACENTER_ID") ?? "1");
+            long machineId = long.Parse(Environment.GetEnvironmentVariable("MACHINE_ID") ?? "1");
 
             return new SnowflakeIdGenerator(datacenterId, machineId);
         });
@@ -52,7 +52,20 @@ public class Program
         }
 
         //app.UseHttpsRedirection();
-        //app.UseRouting();
+        app.UseRouting();
+        app.UseStaticFiles(); // Serve static files
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+
+            // Serve the index.html file as the default page
+            endpoints.MapGet("/", async context =>
+            {
+                context.Response.ContentType = "text/html";
+                await context.Response.SendFileAsync(Path.Combine(env.WebRootPath, "index.html"));
+            });
+        });
         
         app.UseAuthorization();
         

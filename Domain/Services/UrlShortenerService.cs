@@ -21,12 +21,14 @@ public class UrlShortenerService : IUrlShortenerService
 
     public async Task<string> ShortenUrl(string longUrl)
     {
+        Console.WriteLine("Before check data in service");
         var checkResult = await _urlRepository.CheckLongUrl(longUrl);
-        if (!string.IsNullOrEmpty(checkResult))
+        if (checkResult != "null")
         {
             return checkResult;
         }
         
+        Console.WriteLine("After check data in service");
         var id = _snowflakeId.GenerateId();
 
         var shortUrl = _base58Encoder.Encode(id);
@@ -38,6 +40,7 @@ public class UrlShortenerService : IUrlShortenerService
             LongUrl = longUrl
         };
         
+        Console.WriteLine($"new object in Service: {urlMapping.Id} \n long: {urlMapping.LongUrl} \n short: {urlMapping.ShortUrl}");
         await _urlRepository.Save(urlMapping);
         
         return shortUrl;

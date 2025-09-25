@@ -31,6 +31,7 @@ public class UrlRepository : IUrlRepository
     {
         try
         {
+            Console.WriteLine($"Your new item's ID: {urlMapping.Id} \n long: {urlMapping.LongUrl} \n short: {urlMapping.ShortUrl}");
             await _database.UrlMappings.InsertOneAsync(urlMapping);
         }
         catch(Exception ex)
@@ -42,8 +43,13 @@ public class UrlRepository : IUrlRepository
 
     public async Task<string> CheckLongUrl(string longUrl)
     {
+        Console.WriteLine($"Data check in repository");   
         var result = await _database.UrlMappings.Find(x => x.LongUrl == longUrl).FirstOrDefaultAsync();
+        Console.WriteLine(result);
 
+        if (result is null)
+            return "null";
+        
         return result.ShortUrl;
 
     }

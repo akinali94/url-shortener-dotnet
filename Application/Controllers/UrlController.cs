@@ -26,10 +26,13 @@ public class UrlController : ControllerBase
         return Ok(allMappings);
     }
 
-    [HttpPost("Shorten/")]
+    [HttpPost("Shorten")]
     public async Task<IActionResult> ShortenUrl([FromBody] string longUrl)
     {
+        Console.WriteLine($"Your request come to controller --> {longUrl}");
         var shortUrl = await _urlShortenerService.ShortenUrl(longUrl);
+        Console.WriteLine($"Your response is {shortUrl}");
+        
         return Ok(shortUrl);
     }
 
